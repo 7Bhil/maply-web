@@ -22,6 +22,27 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
     }
   }, [coords]);
 
+  const handleLocate = () => {
+    if (!navigator.geolocation) {
+      setError("La géolocalisation n'est pas supportée par ton navigateur.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((f) => ({
+          ...f,
+          lat: pos.coords.latitude.toFixed(6),
+          lng: pos.coords.longitude.toFixed(6),
+        }));
+        setError('');
+      },
+      (err) => {
+        setError("Impossible d'obtenir ta position. Vérifie tes permissions.");
+      }
+    );
+  };
+
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = (e) => {
@@ -107,15 +128,25 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
           </div>
 
           {!coords && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div>
-                <label style={labelStyle}>Latitude</label>
-                <input className="form-input" placeholder="48.8566" value={form.lat} onChange={set('lat')} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>Latitude</label>
+                  <input className="form-input" placeholder="48.8566" value={form.lat} onChange={set('lat')} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Longitude</label>
+                  <input className="form-input" placeholder="2.3522" value={form.lng} onChange={set('lng')} />
+                </div>
               </div>
-              <div>
-                <label style={labelStyle}>Longitude</label>
-                <input className="form-input" placeholder="2.3522" value={form.lng} onChange={set('lng')} />
-              </div>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleLocate}
+                style={{ fontSize: 12, padding: '8px', borderStyle: 'dashed' }}
+              >
+                📍 Utiliser ma position actuelle
+              </button>
             </div>
           )}
 
