@@ -1,6 +1,6 @@
 import { getCategoryById } from '../data/categories';
 
-export default function PlaceCard({ place, selected, onClick, onDelete, onCopy }) {
+export default function PlaceCard({ place, selected, onClick, onDelete, onCopy, onShare }) {
   const cat = getCategoryById(place.category);
   const date = new Date(place.createdAt).toLocaleDateString('fr-FR', {
     day: 'numeric', month: 'short',
@@ -61,8 +61,16 @@ export default function PlaceCard({ place, selected, onClick, onDelete, onCopy }
       <div style={{ display: 'flex', gap: 4, marginTop: -2 }}>
         <button
           className="btn-secondary"
+          onClick={(e) => { e.stopPropagation(); onShare(place); }}
+          style={{ padding: '4px 8px', fontSize: 13, background: 'var(--bg-tertiary)', border: 'none' }}
+          title="Partager"
+        >
+          📤
+        </button>
+        <button
+          className="btn-secondary"
           onClick={(e) => { e.stopPropagation(); onCopy(place); }}
-          style={{ padding: '4px 8px', fontSize: 13, background: 'var(--bg-tertiary)' }}
+          style={{ padding: '4px 8px', fontSize: 13, background: 'var(--bg-tertiary)', border: 'none' }}
           title="Copier les coordonnées"
         >
           📋

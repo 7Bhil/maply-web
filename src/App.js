@@ -65,6 +65,24 @@ export default function App() {
     addToast(`📋 Coordonnées de "${place.name}" copiées !`);
   }, [addToast]);
 
+  const handleShare = useCallback(async (place) => {
+    const text = `Regarde ce lieu sur Maply : ${place.name}\n${place.description || ''}\nCoordonnées : ${place.lat}, ${place.lng}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: place.name,
+          text: text,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log('Erreur de partage:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(text);
+      addToast(`📋 Détails copiés (Partage non supporté)`);
+    }
+  }, [addToast]);
+
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
       <Sidebar
@@ -73,6 +91,7 @@ export default function App() {
         onSelectPlace={handleSelectPlace}
         onDeletePlace={handleDelete}
         onCopyCoords={handleCopyCoords}
+        onSharePlace={handleShare}
         onAddClick={handleAddClick}
         filterCat={filterCat}
         setFilterCat={setFilterCat}

@@ -7,6 +7,7 @@ export default function Sidebar({
   onSelectPlace,
   onDeletePlace,
   onCopyCoords,
+  onSharePlace,
   onAddClick,
   filterCat,
   setFilterCat,
@@ -145,6 +146,7 @@ export default function Sidebar({
               onClick={() => onSelectPlace(place)}
               onDelete={onDeletePlace}
               onCopy={onCopyCoords}
+              onShare={onSharePlace}
             />
           ))
         )}
