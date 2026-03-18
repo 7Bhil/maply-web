@@ -1,98 +1,96 @@
+import React from 'react';
+import { Share2, Copy, Trash2, Heart, ExternalLink } from 'lucide-react';
 import { getCategoryById } from '../data/categories';
 
-export default function PlaceCard({ place, selected, onClick, onDelete, onCopy, onShare }) {
+export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onShare, selectedId, userLocation }) {
+  const isSelected = selectedId === place.id;
   const cat = getCategoryById(place.category);
-  const date = new Date(place.createdAt).toLocaleDateString('fr-FR', {
-    day: 'numeric', month: 'short',
-  });
+
+  const calculateDistance = (lat, lng) => {
+    if (!userLocation) return null;
+    const R = 6371; // km
+    const dLat = (lat - userLocation.lat) * (Math.PI / 180);
+    const dLon = (lng - userLocation.lng) * (Math.PI / 180);
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(userLocation.lat * (Math.PI / 180)) * Math.cos(lat * (Math.PI / 180)) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; 
+    return d < 1 ? `${Math.round(d * 1000)} m` : `${d.toFixed(1)} km`;
+  };
+
+  const distance = calculateDistance(place.lat, place.lng);
 
   return (
-    <div
-      onClick={onClick}
-      style={{
-        background: selected ? 'var(--bg-tertiary)' : 'var(--bg-card)',
-        border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
-        borderRadius: 'var(--radius-sm)',
-        padding: '12px 14px',
-        cursor: 'pointer',
-        transition: 'all 0.18s ease',
-        boxShadow: selected ? `0 0 0 1px var(--accent), 0 4px 20px var(--accent-glow)` : 'none',
-        display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start',
-        position: 'relative',
-      }}
+    <div 
+      className={`place-card ${isSelected ? 'selected' : ''}`}
+      onClick={() => onSelect(place)}
     >
-      {/* Emoji badge */}
-      <div style={{
-        width: 38,
-        height: 38,
-        borderRadius: 10,
-        background: `${cat.color}22`,
-        border: `1px solid ${cat.color}44`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 18,
-        flexShrink: 0,
-      }}>
-        {cat.emoji}
-      </div>
+      {place.image && (
+        <div className="place-card-image-container">
+          <img src={place.image} alt={place.name} className="place-card-image" />
+          {place.isFavorite && (
+            <div className="favorite-badge">
+              <Heart size={14} fill="#f43f5e" color="#f43f5e" />
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {place.name}
-          </div>
-          <div style={{ fontSize: 10 }}>{'⭐️'.repeat(place.rating || 3)}</div>
-        </div>
-        <div style={{ fontSize: 12, color: `${cat.color}cc`, fontWeight: 500, marginTop: 1 }}>
-          {cat.label}
-        </div>
-        {place.address && (
-          <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            📍 {place.address}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        {!place.image && (
+          <div className="place-icon" style={{ backgroundColor: `${cat.color}15`, color: cat.color }}>
+            {cat.emoji}
           </div>
         )}
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-          {date}
+        
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h3 className="place-name">{place.name}</h3>
+            {!place.image && place.isFavorite && <Heart size={14} fill="#f43f5e" color="#f43f5e" />}
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+            <span className="place-category">{cat.label}</span>
+            {distance && <span className="place-distance">• {distance}</span>}
+          </div>
+
+          <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+            {'⭐️'.repeat(Math.round(place.rating || 3))}
+          </div>
+
+          {isSelected && place.description && (
+            <p className="place-description">
+              {place.description}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 4, marginTop: -2 }}>
-        <button
-          className="btn-secondary"
-          onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`, '_blank'); }}
-          style={{ padding: '4px 8px', fontSize: 13, background: 'var(--bg-tertiary)', border: 'none' }}
+      <div className="place-actions" style={{ 
+        marginTop: isSelected ? 15 : 12, 
+        borderTop: isSelected ? '1px solid var(--border)' : 'none', 
+        paddingTop: isSelected ? 12 : 0 
+      }}>
+        <button onClick={(e) => { e.stopPropagation(); onShare(place); }} title="Partager">
+          <Share2 size={16} />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); onCopyCoords(place); }} title="Copier les coordonnées">
+          <Copy size={16} />
+        </button>
+        <a 
+          href={window.navigator.platform.includes('Mac') ? `maps://app?daddr=${place.lat},${place.lng}` : `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`}
+          target="_blank" 
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="nav-btn"
           title="Itinéraire"
         >
-          🚗
-        </button>
-        <button
-          className="btn-secondary"
-          onClick={(e) => { e.stopPropagation(); onShare(place); }}
-          style={{ padding: '4px 8px', fontSize: 13, background: 'var(--bg-tertiary)', border: 'none' }}
-          title="Partager"
-        >
-          📤
-        </button>
-        <button
-          className="btn-secondary"
-          onClick={(e) => { e.stopPropagation(); onCopy(place); }}
-          style={{ padding: '4px 8px', fontSize: 13, background: 'var(--bg-tertiary)', border: 'none' }}
-          title="Copier les coordonnées"
-        >
-          📋
-        </button>
-        <button
-          className="btn-danger"
-          onClick={(e) => { e.stopPropagation(); onDelete(place.id); }}
-          style={{ padding: '4px 8px', fontSize: 16, lineHeight: 1 }}
-          title="Supprimer"
-        >
-          ×
+          <ExternalLink size={16} />
+        </a>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(place.id); }} className="delete-btn" title="Supprimer">
+          <Trash2 size={16} />
         </button>
       </div>
     </div>

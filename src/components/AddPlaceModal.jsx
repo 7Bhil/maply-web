@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, Heart, X } from 'lucide-react';
 import { CATEGORIES, getCategoryById } from '../data/categories';
 
 export default function AddPlaceModal({ coords, onConfirm, onClose }) {
@@ -10,7 +11,10 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
     lat: coords?.lat?.toFixed(6) || '',
     lng: coords?.lng?.toFixed(6) || '',
     rating: 3,
+    isFavorite: false,
+    image: null,
   });
+  const fileInputRef = useRef(null);
   const [error, setError] = useState('');
   const [addrQuery, setAddrQuery] = useState('');
   const [addrResults, setAddrResults] = useState([]);
@@ -54,6 +58,28 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(f => ({ ...f, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLocate = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setForm(f => ({
+        ...f,
+        lat: pos.coords.latitude.toFixed(6),
+        lng: pos.coords.longitude.toFixed(6),
+      }));
+    }, null, { enableHighAccuracy: true });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -156,16 +182,65 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
           </div>
 
           <div>
-            <label style={labelStyle}>Note</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {[1, 2, 3, 4, 5].map(s => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, rating: s }))}
-                  style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', opacity: form.rating >= s ? 1 : 0.2 }}
-                >⭐️</button>
-              ))}
+            <label style={labelStyle}>Note & Favori</label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, rating: s }))}
+                    style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', opacity: form.rating >= s ? 1 : 0.2 }}
+                  >⭐️</button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, isFavorite: !f.isFavorite }))}
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid var(--border)',
+                  padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
+                  color: form.isFavorite ? '#f43f5e' : 'var(--text-muted)',
+                  borderColor: form.isFavorite ? '#f43f5e' : 'var(--border)'
+                }}
+              >
+                <Heart size={16} fill={form.isFavorite ? '#f43f5e' : 'transparent'} />
+                <span style={{ fontSize: 12, fontWeight: 600 }}>Coup de cœur</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Photo</label>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                className="btn-secondary"
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 80, borderStyle: 'dashed' }}
+              >
+                <Camera size={20} />
+                {form.image ? 'Changer' : 'Ajouter une photo'}
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                accept="image/*" 
+                style={{ display: 'none' }} 
+              />
+              {form.image && (
+                <div style={{ position: 'relative', width: 80, height: 80, borderRadius: 8, overflow: 'hidden' }}>
+                  <img src={form.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button 
+                    type="button" 
+                    onClick={() => setForm(f => ({ ...f, image: null }))}
+                    style={{ position: 'absolute', top: 2, right: 2, background: 'white', borderRadius: '50%', border: 'none', padding: 2, display: 'flex', cursor: 'pointer' }}
+                  >
+                    <X size={14} color="#f43f5e" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

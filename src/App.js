@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import './index.css';
 import MapView from './components/MapView';
 import Sidebar from './components/Sidebar';
@@ -15,6 +15,15 @@ export default function App() {
   const [pendingCoords, setPendingCoords] = useState(null);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      }, null, { enableHighAccuracy: true });
+    }
+  }, []);
 
   // Open modal (from either sidebar button or map click)
   const openAddModal = useCallback((coords = null) => {
@@ -98,6 +107,7 @@ export default function App() {
         search={search}
         setSearch={setSearch}
         isAdding={isAdding}
+        userLocation={userLocation}
       />
 
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>

@@ -1,5 +1,7 @@
-import { CATEGORIES } from '../data/categories';
+import React, { useState } from 'react';
+import { Search, Heart } from 'lucide-react';
 import PlaceCard from './PlaceCard';
+import { CATEGORIES } from '../data/categories';
 
 export default function Sidebar({
   places,
@@ -14,11 +16,20 @@ export default function Sidebar({
   search,
   setSearch,
   isAdding,
+  userLocation,
 }) {
+  const [activeFilter, setActiveFilter] = useState('all');
+
   const filtered = places.filter((p) => {
     const matchCat = !filterCat || p.category === filterCat;
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+    let matchNewFilters = true;
+    if (activeFilter === 'favorites') {
+      matchNewFilters = p.isFavorite; // Assuming 'isFavorite' property exists on place objects
+    } else if (activeFilter === 'high_rated') {
+      matchNewFilters = p.rating >= 4; // Assuming 'rating' property exists on place objects
+    }
+    return matchCat && matchSearch && matchNewFilters;
   });
 
   return (
@@ -52,34 +63,44 @@ export default function Sidebar({
               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{places.length} lieu{places.length !== 1 ? 'x' : ''}</div>
             </div>
           </div>
-          <button
-            className="btn-primary"
-            onClick={onAddClick}
-            style={{
-              padding: '8px 14px',
-              fontSize: 13,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              background: isAdding ? 'var(--bg-tertiary)' : undefined,
-              boxShadow: isAdding ? 'none' : undefined,
-            }}
-          >
-            {isAdding ? '✕ Annuler' : '+ Lieu'}
-          </button>
         </div>
 
         {/* Search */}
-        <div style={{ position: 'relative' }}>
-          <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--text-muted)' }}>🔍</span>
-          <input
-            className="form-input"
-            placeholder="Rechercher un lieu…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ paddingLeft: 34 }}
-          />
+        <div className="search-box">
+          <div style={{ position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ paddingLeft: 38 }}
+            />
+          </div>
         </div>
+      </div>
+
+      <div style={{ padding: '0 20px 15px', display: 'flex', gap: 8, overflowX: 'auto' }} className="no-scrollbar">
+        <button
+          onClick={() => setActiveFilter('all')}
+          className={`filter-chip ${activeFilter === 'all' ? 'active' : ''}`}
+        >
+          Tous
+        </button>
+        <button
+          onClick={() => setActiveFilter('favorites')}
+          className={`filter-chip ${activeFilter === 'favorites' ? 'active' : ''}`}
+          style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+        >
+          <Heart size={12} fill={activeFilter === 'favorites' ? 'white' : 'transparent'} color={activeFilter === 'favorites' ? 'white' : '#f43f5e'} />
+          Favoris
+        </button>
+        <button
+          onClick={() => setActiveFilter('high_rated')}
+          className={`filter-chip ${activeFilter === 'high_rated' ? 'active' : ''}`}
+        >
+          4+ ⭐
+        </button>
       </div>
 
       {/* Category filters */}
@@ -142,11 +163,12 @@ export default function Sidebar({
             <PlaceCard
               key={place.id}
               place={place}
-              selected={place.id === selectedId}
-              onClick={() => onSelectPlace(place)}
+              selectedId={selectedId}
+              onSelect={onSelectPlace}
               onDelete={onDeletePlace}
-              onCopy={onCopyCoords}
+              onCopyCoords={onCopyCoords}
               onShare={onSharePlace}
+              userLocation={userLocation}
             />
           ))
         )}

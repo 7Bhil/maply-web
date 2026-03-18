@@ -1,29 +1,38 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
+import { Crosshair, Loader } from 'lucide-react';
 
 export default function LocateUser({ onLocationFound }) {
   const map = useMap();
   const [loading, setLoading] = useState(false);
 
-  const locate = () => {
+  const locate = useCallback(() => {
     setLoading(true);
-    map.locate({ setView: true, maxZoom: 16 });
-  };
+    map.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true });
+  }, [map]);
 
   useEffect(() => {
-    map.on('locationfound', (e) => {
+    // One-time listeners
+    const onFound = (e) => {
       setLoading(false);
       if (onLocationFound) onLocationFound(e.latlng);
-    });
+    };
 
-    map.on('locationerror', () => {
+    const onError = () => {
       setLoading(false);
-      // Fallback or silent fail
       console.warn("Geolocation denied or failed.");
-    });
+    };
 
-    // Auto-locate on mount
+    map.on('locationfound', onFound);
+    map.on('locationerror', onError);
+
+    // Auto-locate once on mount
     locate();
+
+    return () => {
+      map.off('locationfound', onFound);
+      map.off('locationerror', onError);
+    };
   }, [map, locate, onLocationFound]);
 
   return (
@@ -58,7 +67,7 @@ export default function LocateUser({ onLocationFound }) {
         e.currentTarget.style.color = 'var(--text-primary)';
       }}
     >
-      {loading ? '🛰️' : '🎯'}
+      {loading ? <Loader className="spin" size={20} /> : <Crosshair size={20} />}
     </button>
   );
 }
