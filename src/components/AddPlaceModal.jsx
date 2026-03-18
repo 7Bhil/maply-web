@@ -9,8 +9,12 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
     address: '',
     lat: coords?.lat?.toFixed(6) || '',
     lng: coords?.lng?.toFixed(6) || '',
+    rating: 3,
   });
   const [error, setError] = useState('');
+  const [addrQuery, setAddrQuery] = useState('');
+  const [addrResults, setAddrResults] = useState([]);
+  const [loadingAddr, setLoadingAddr] = useState(false);
 
   useEffect(() => {
     if (coords) {
@@ -22,25 +26,31 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
     }
   }, [coords]);
 
-  const handleLocate = () => {
-    if (!navigator.geolocation) {
-      setError("La géolocalisation n'est pas supportée par ton navigateur.");
-      return;
+  const handleSearchAddr = async (q) => {
+    setAddrQuery(q);
+    if (q.length < 3) { setAddrResults([]); return; }
+    setLoadingAddr(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`);
+      const data = await res.json();
+      setAddrResults(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAddr(false);
     }
+  };
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setForm((f) => ({
-          ...f,
-          lat: pos.coords.latitude.toFixed(6),
-          lng: pos.coords.longitude.toFixed(6),
-        }));
-        setError('');
-      },
-      (err) => {
-        setError("Impossible d'obtenir ta position. Vérifie tes permissions.");
-      }
-    );
+  const selectAddr = (item) => {
+    setForm(f => ({
+      ...f,
+      name: item.display_name.split(',')[0],
+      address: item.display_name,
+      lat: parseFloat(item.lat).toFixed(6),
+      lng: parseFloat(item.lon).toFixed(6),
+    }));
+    setAddrResults([]);
+    setAddrQuery('');
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -54,15 +64,16 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
 
     const cat = getCategoryById(form.category);
     onConfirm({
+      ...form,
       name: form.name.trim(),
-      category: form.category,
-      categoryLabel: cat.label,
-      categoryEmoji: cat.emoji,
-      categoryColor: cat.color,
       description: form.description.trim(),
       address: form.address.trim(),
       lat,
       lng,
+      rating: form.rating,
+      categoryLabel: cat.label,
+      categoryEmoji: cat.emoji,
+      categoryColor: cat.color,
     });
   };
 
@@ -117,14 +128,45 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
             />
           </div>
 
-          <div>
-            <label style={labelStyle}>Adresse (optionnel)</label>
+          <div style={{ position: 'relative' }}>
+            <label style={labelStyle}>Rechercher une adresse</label>
             <input
               className="form-input"
-              placeholder="Ex: 12 Rue de la Paix, Paris"
-              value={form.address}
-              onChange={set('address')}
+              placeholder="Ex: Louvre, Paris..."
+              value={addrQuery}
+              onChange={(e) => handleSearchAddr(e.target.value)}
             />
+            {loadingAddr && <div style={{ fontSize: 10, color: 'var(--accent)', marginTop: 4 }}>Recherche en cours...</div>}
+            {addrResults.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
+                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                borderRadius: 8, marginTop: 4, overflow: 'hidden', boxShadow: 'var(--shadow-lg)'
+              }}>
+                {addrResults.map((r, i) => (
+                  <div key={i} onClick={() => selectAddr(r)} style={{
+                    padding: '8px 12px', fontSize: 12, cursor: 'pointer', borderBottom: '1px solid var(--border)',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                  }} className="addr-result-item">
+                    {r.display_name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Note</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[1, 2, 3, 4, 5].map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, rating: s }))}
+                  style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', opacity: form.rating >= s ? 1 : 0.2 }}
+                >⭐️</button>
+              ))}
+            </div>
           </div>
 
           {!coords && (

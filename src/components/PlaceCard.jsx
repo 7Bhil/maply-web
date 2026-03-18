@@ -41,8 +41,11 @@ export default function PlaceCard({ place, selected, onClick, onDelete, onCopy, 
 
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {place.name}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {place.name}
+          </div>
+          <div style={{ fontSize: 10 }}>{'⭐️'.repeat(place.rating || 3)}</div>
         </div>
         <div style={{ fontSize: 12, color: `${cat.color}cc`, fontWeight: 500, marginTop: 1 }}>
           {cat.label}
@@ -59,6 +62,14 @@ export default function PlaceCard({ place, selected, onClick, onDelete, onCopy, 
 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 4, marginTop: -2 }}>
+        <button
+          className="btn-secondary"
+          onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`, '_blank'); }}
+          style={{ padding: '4px 8px', fontSize: 13, background: 'var(--bg-tertiary)', border: 'none' }}
+          title="Itinéraire"
+        >
+          🚗
+        </button>
         <button
           className="btn-secondary"
           onClick={(e) => { e.stopPropagation(); onShare(place); }}
