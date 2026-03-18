@@ -1,6 +1,6 @@
 import { getCategoryById } from '../data/categories';
 
-export default function PlaceCard({ place, selected, onClick, onDelete }) {
+export default function PlaceCard({ place, selected, onClick, onDelete, onCopy }) {
   const cat = getCategoryById(place.category);
   const date = new Date(place.createdAt).toLocaleDateString('fr-FR', {
     day: 'numeric', month: 'short',
@@ -57,15 +57,25 @@ export default function PlaceCard({ place, selected, onClick, onDelete }) {
         </div>
       </div>
 
-      {/* Delete */}
-      <button
-        className="btn-danger"
-        onClick={(e) => { e.stopPropagation(); onDelete(place.id); }}
-        style={{ marginTop: -2, padding: '4px 8px', fontSize: 16, lineHeight: 1 }}
-        title="Supprimer"
-      >
-        ×
-      </button>
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 4, marginTop: -2 }}>
+        <button
+          className="btn-secondary"
+          onClick={(e) => { e.stopPropagation(); onCopy(place); }}
+          style={{ padding: '4px 8px', fontSize: 13, background: 'var(--bg-tertiary)' }}
+          title="Copier les coordonnées"
+        >
+          📋
+        </button>
+        <button
+          className="btn-danger"
+          onClick={(e) => { e.stopPropagation(); onDelete(place.id); }}
+          style={{ padding: '4px 8px', fontSize: 16, lineHeight: 1 }}
+          title="Supprimer"
+        >
+          ×
+        </button>
+      </div>
     </div>
   );
 }

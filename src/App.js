@@ -59,6 +59,12 @@ export default function App() {
     setIsAdding(false);
   }, []);
 
+  const handleCopyCoords = useCallback((place) => {
+    const text = `${place.lat}, ${place.lng}`;
+    navigator.clipboard.writeText(text);
+    addToast(`📋 Coordonnées de "${place.name}" copiées !`);
+  }, [addToast]);
+
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
       <Sidebar
@@ -66,6 +72,7 @@ export default function App() {
         selectedId={selectedPlace?.id}
         onSelectPlace={handleSelectPlace}
         onDeletePlace={handleDelete}
+        onCopyCoords={handleCopyCoords}
         onAddClick={handleAddClick}
         filterCat={filterCat}
         setFilterCat={setFilterCat}
