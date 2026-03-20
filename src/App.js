@@ -48,8 +48,8 @@ export default function App() {
     }
   }, [isAdding]);
 
-  const handleConfirmAdd = useCallback((placeData) => {
-    const newPlace = addPlace(placeData);
+  const handleConfirmAdd = useCallback(async (placeData) => {
+    const newPlace = await addPlace(placeData);
     setIsAdding(false);
     setPendingCoords(null);
     setSelectedPlace(newPlace);

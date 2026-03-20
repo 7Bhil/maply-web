@@ -21,13 +21,7 @@ export function usePlaces() {
   const [places, setPlaces] = useState(getSaved);
   const [loading, setLoading] = useState(false);
 
-  const isSupabaseConfigured = () => {
-    const url = process.env.REACT_APP_SUPABASE_URL || 'TA_SUPABASE_URL';
-    return url !== 'TA_SUPABASE_URL';
-  };
-
   const fetchPlaces = useCallback(async () => {
-    if (!isSupabaseConfigured()) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('places')
@@ -49,18 +43,16 @@ export function usePlaces() {
   useEffect(() => {
     fetchPlaces();
 
-    if (isSupabaseConfigured()) {
-      const channel = supabase
-        .channel('places_changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'places' }, () => {
-          fetchPlaces();
-        })
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
+    const channel = supabase
+      .channel('places_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'places' }, () => {
+        fetchPlaces();
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchPlaces]);
 
   const addPlace = useCallback(async (placeData) => {
@@ -70,27 +62,25 @@ export function usePlaces() {
       ...placeData,
     };
 
-    if (isSupabaseConfigured()) {
-      const { data, error } = await supabase
-        .from('places')
-        .insert([{
-          id: newPlace.id,
-          name: newPlace.name,
-          description: newPlace.description,
-          category: newPlace.category,
-          lat: newPlace.lat,
-          lng: newPlace.lng,
-          rating: newPlace.rating,
-          is_favorite: newPlace.isFavorite,
-          image_url: newPlace.image, // Temporarily base64, will migrate to bucket later
-          created_at: newPlace.createdAt,
-        }])
-        .select();
-      
-      if (!error && data) {
-        setPlaces(prev => [data[0], ...prev]);
-        return data[0];
-      }
+    const { data, error } = await supabase
+      .from('places')
+      .insert([{
+        id: newPlace.id,
+        name: newPlace.name,
+        description: newPlace.description,
+        category: newPlace.category,
+        lat: newPlace.lat,
+        lng: newPlace.lng,
+        rating: newPlace.rating,
+        is_favorite: newPlace.isFavorite,
+        image_url: newPlace.image, // Temporarily base64, will migrate to bucket later
+        created_at: newPlace.createdAt,
+      }])
+      .select();
+    
+    if (!error && data) {
+      setPlaces(prev => [data[0], ...prev]);
+      return data[0];
     }
 
     setPlaces((prev) => {
@@ -102,9 +92,7 @@ export function usePlaces() {
   }, []);
 
   const deletePlace = useCallback(async (id) => {
-    if (isSupabaseConfigured()) {
-      await supabase.from('places').delete().eq('id', id);
-    }
+    await supabase.from('places').delete().eq('id', id);
 
     setPlaces((prev) => {
       const updated = prev.filter((p) => p.id !== id);
