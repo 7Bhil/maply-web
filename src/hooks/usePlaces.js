@@ -63,6 +63,29 @@ export function usePlaces() {
       ...placeData,
     };
 
+    let imageUrl = placeData.image;
+
+    // Supabase Storage upload if it's a File (from AddPlaceModal)
+    if (placeData.image && typeof placeData.image !== 'string') {
+      try {
+        const file = placeData.image;
+        const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
+        const fileName = `${newPlace.id}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('place_photos')
+          .upload(fileName, file);
+
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from('place_photos')
+            .getPublicUrl(fileName);
+          imageUrl = urlData.publicUrl;
+        }
+      } catch (err) {
+        console.error('Image upload failed', err);
+      }
+    }
+
     const { data, error } = await supabase
       .from('places')
       .insert([{
@@ -74,7 +97,7 @@ export function usePlaces() {
         lng: newPlace.lng,
         rating: newPlace.rating,
         is_favorite: newPlace.isFavorite,
-        image_url: newPlace.image, // Temporarily base64, will migrate to bucket later
+        image_url: imageUrl,
         created_at: newPlace.createdAt,
       }])
       .select();
