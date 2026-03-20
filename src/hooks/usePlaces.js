@@ -33,6 +33,7 @@ export function usePlaces() {
         ...p,
         isFavorite: p.is_favorite,
         image: p.image_url,
+        createdAt: p.created_at,
       }));
       setPlaces(mapped);
       save(mapped);
