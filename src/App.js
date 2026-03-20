@@ -117,6 +117,7 @@ export default function App() {
           isAdding={isAdding}
           onMapClick={handleMapClick}
           onSelectPlace={handleSelectPlace}
+          userLocation={userLocation}
         />
 
         {/* Floating add button when not in add mode */}

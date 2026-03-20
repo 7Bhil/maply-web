@@ -77,7 +77,7 @@ function FlyToPlace({ selectedPlace }) {
   return null;
 }
 
-export default function MapView({ places, selectedPlace, isAdding, onMapClick, onSelectPlace }) {
+export default function MapView({ places, selectedPlace, isAdding, onMapClick, onSelectPlace, userLocation }) {
   return (
     <MapContainer
       center={[48.8566, 2.3522]}
@@ -92,7 +92,43 @@ export default function MapView({ places, selectedPlace, isAdding, onMapClick, o
 
       <MapClickHandler isAdding={isAdding} onMapClick={onMapClick} />
       {selectedPlace && <FlyToPlace selectedPlace={selectedPlace} />}
-      <LocateUser />
+      <LocateUser onLocationFound={(latlng) => {/* already centered by locate */}} />
+
+      {userLocation && (
+        <Marker 
+          position={[userLocation.lat, userLocation.lng]}
+          icon={L.divIcon({
+            className: 'user-marker',
+            html: `<div style="width:20px;height:20px;border-radius:50%;background:#6366f1;border:3px solid white;box-shadow:0 0 10px rgba(99,102,241,0.5)"></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          })}
+        >
+          <Popup>
+            <div className="custom-popup" style={{ padding: '2px', minWidth: 180 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: '#6366f122', border: '1px solid #6366f144',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1',
+                }}>
+                  <Navigation size={18} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>Ma Position</div>
+                  <div style={{ fontSize: 11, color: '#6366f1' }}>Utilisateur</div>
+                </div>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '5px 0' }}>
+                Tu es actuellement ici.
+              </p>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'right' }}>
+                {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+      )}
 
       {places.map((place) => {
         const cat = getCategoryById(place.category);
