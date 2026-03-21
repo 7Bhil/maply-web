@@ -4,11 +4,13 @@ import MapView from './components/MapView';
 import Sidebar from './components/Sidebar';
 import AddPlaceModal from './components/AddPlaceModal';
 import { usePlaces } from './hooks/usePlaces';
+import { useLiveLocations } from './hooks/useLiveLocations';
 import { useToast } from './hooks/useToast';
 
 export default function App() {
-  const { places, addPlace, deletePlace } = usePlaces();
+  const { places, addPlace, deletePlace, toggleFavorite, updateRating } = usePlaces();
   const { toasts, addToast } = useToast();
+  const { liveUsers } = useLiveLocations();
 
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -118,6 +120,7 @@ export default function App() {
           onMapClick={handleMapClick}
           onSelectPlace={handleSelectPlace}
           userLocation={userLocation}
+          liveUsers={liveUsers}
         />
 
         {/* Floating add button when not in add mode */}

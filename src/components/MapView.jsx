@@ -77,7 +77,7 @@ function FlyToPlace({ selectedPlace }) {
   return null;
 }
 
-export default function MapView({ places, selectedPlace, isAdding, onMapClick, onSelectPlace, userLocation }) {
+export default function MapView({ places, selectedPlace, isAdding, onMapClick, onSelectPlace, userLocation, liveUsers }) {
   return (
     <MapContainer
       center={[48.8566, 2.3522]}
@@ -129,6 +129,37 @@ export default function MapView({ places, selectedPlace, isAdding, onMapClick, o
           </Popup>
         </Marker>
       )}
+
+      {liveUsers?.map(user => (
+        <Marker
+          key={user.username}
+          position={[user.lat, user.lng]}
+          icon={L.divIcon({
+            className: 'live-user-marker',
+            html: `
+              <div style="position:relative">
+                <div style="width:32px;height:32px;border-radius:50%;background:#f43f5e;border:2px solid white;display:flex;alignItems:center;justifyContent:center;color:white;box-shadow:0 4px 10px rgba(244,63,94,0.4)">
+                  <span style="font-size:16px">👤</span>
+                </div>
+                <div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.2)">
+                  ${user.username}
+                </div>
+              </div>
+            `,
+            iconSize: [32, 40],
+            iconAnchor: [16, 16]
+          })}
+        >
+          <Popup>
+            <div style={{ padding: 5, textAlign: 'center' }}>
+              <div style={{ fontWeight: 'bold' }}>{user.username} (En direct)</div>
+              <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>
+                Dernier mouvement : {new Date(user.last_seen).toLocaleTimeString()}
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
 
       {places.map((place) => {
         const cat = getCategoryById(place.category);
