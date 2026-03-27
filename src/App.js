@@ -13,7 +13,7 @@ import { LogOut, Plus } from 'lucide-react';
 export default function App() {
   const [session, setSession] = useState(null);
   
-  const { places, addPlace, deletePlace, toggleFavorite, updateRating } = usePlaces();
+  const { places, addPlace, deletePlace, updatePlace, toggleFavorite, updateRating } = usePlaces();
   const { toasts, addToast } = useToast();
   const { liveUsers } = useLiveLocations();
 
