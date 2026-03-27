@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { useEffect, useRef, useState } from 'react';
+import { renderToString } from 'react-dom/server';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { MapPin, Navigation, Heart, Lock } from 'lucide-react';
 import { getCategoryById } from '../data/categories';
@@ -15,6 +16,7 @@ L.Icon.Default.mergeOptions({
 });
 
 function createCategoryIcon(cat, selected) {
+  const iconHtml = renderToString(<cat.IconComponent size={18} />);
   return L.divIcon({
     className: `custom-marker ${selected ? 'selected' : ''}`,
     html: `<div style="
@@ -28,10 +30,7 @@ function createCategoryIcon(cat, selected) {
       cursor:pointer;
       transition: all 0.2s ease;
     ">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-        <circle cx="12" cy="10" r="3"></circle>
-      </svg>
+      ${iconHtml}
     </div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
@@ -78,7 +77,41 @@ function FlyToPlace({ selectedPlace }) {
 }
 
 export default function MapView({ places, selectedPlace, isAdding, onMapClick, onSelectPlace, userLocation, liveUsers }) {
+  const [routeData, setRouteData] = useState(null);
+
+  useEffect(() => {
+    if (selectedPlace && userLocation) {
+      const fetchRoute = async () => {
+        try {
+          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${userLocation.lng},${userLocation.lat};${selectedPlace.lng},${selectedPlace.lat}?overview=full&geometries=geojson`);
+          const data = await res.json();
+          if (data.routes && data.routes[0]) {
+            const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]); // [lat, lng]
+            const durationSec = data.routes[0].duration;
+            const distanceM = data.routes[0].distance;
+            
+            const hours = Math.floor(durationSec / 3600);
+            const minutes = Math.floor((durationSec % 3600) / 60);
+            let timeStr = '';
+            if (hours > 0) timeStr += `${hours}h `;
+            timeStr += `${minutes}m`;
+
+            const distStr = distanceM > 1000 ? `${(distanceM / 1000).toFixed(1)} km` : `${Math.round(distanceM)} m`;
+
+            setRouteData({ coords, timeStr, distStr });
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      };
+      fetchRoute();
+    } else {
+      setRouteData(null);
+    }
+  }, [selectedPlace, userLocation]);
+
   return (
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
     <MapContainer
       center={[48.8566, 2.3522]}
       zoom={13}
@@ -179,7 +212,43 @@ export default function MapView({ places, selectedPlace, isAdding, onMapClick, o
           </Marker>
         );
       })}
+
+      {routeData && (
+        <Polyline 
+          positions={routeData.coords} 
+          color="var(--accent)" 
+          weight={4} 
+          dashArray="10, 10"
+          opacity={0.8}
+        />
+      )}
     </MapContainer>
+
+    {routeData && (
+      <div style={{
+        position: 'absolute',
+        top: 24,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border)',
+        borderRadius: 24,
+        padding: '10px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        boxShadow: 'var(--shadow-lg)'
+      }}>
+        <div style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}>
+          🚗 {routeData.timeStr}
+        </div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500 }}>
+          ({routeData.distStr} - sans trafic)
+        </div>
+      </div>
+    )}
+    </div>
   );
 }
 

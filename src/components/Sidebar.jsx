@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Heart } from 'lucide-react';
+import { Search, Heart, Globe } from 'lucide-react';
 import PlaceCard from './PlaceCard';
 import { CATEGORIES } from '../data/categories';
 
@@ -8,6 +8,7 @@ export default function Sidebar({
   selectedId,
   onSelectPlace,
   onDeletePlace,
+  onEditPlace,
   onCopyCoords,
   onSharePlace,
   onAddClick,
@@ -17,6 +18,7 @@ export default function Sidebar({
   setSearch,
   isAdding,
   userLocation,
+  sessionUserId,
 }) {
   const [activeFilter, setActiveFilter] = useState('all');
 
@@ -113,7 +115,7 @@ export default function Sidebar({
       }}>
         <CategoryPill
           label="Tous"
-          emoji="🌍"
+          icon={Globe}
           active={!filterCat}
           onClick={() => setFilterCat(null)}
         />
@@ -121,7 +123,7 @@ export default function Sidebar({
           <CategoryPill
             key={c.id}
             label={c.label}
-            emoji={c.emoji}
+            icon={c.IconComponent}
             color={c.color}
             active={filterCat === c.id}
             onClick={() => setFilterCat(filterCat === c.id ? null : c.id)}
@@ -166,9 +168,11 @@ export default function Sidebar({
               selectedId={selectedId}
               onSelect={onSelectPlace}
               onDelete={onDeletePlace}
+              onEdit={onEditPlace}
               onCopyCoords={onCopyCoords}
               onShare={onSharePlace}
               userLocation={userLocation}
+              sessionUserId={sessionUserId}
             />
           ))
         )}
@@ -177,7 +181,7 @@ export default function Sidebar({
   );
 }
 
-function CategoryPill({ label, emoji, color, active, onClick }) {
+function CategoryPill({ label, icon: Icon, color, active, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -197,7 +201,7 @@ function CategoryPill({ label, emoji, color, active, onClick }) {
         whiteSpace: 'nowrap',
       }}
     >
-      <span>{emoji}</span> {label}
+      {Icon && <Icon size={14} />} {label}
     </button>
   );
 }

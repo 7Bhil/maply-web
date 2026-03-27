@@ -1,7 +1,7 @@
-import { Share2, Copy, Trash2, Heart, ExternalLink, Lock } from 'lucide-react';
+import { Share2, Copy, Trash2, Heart, ExternalLink, Lock, PenLine } from 'lucide-react';
 import { getCategoryById } from '../data/categories';
 
-export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onShare, selectedId, userLocation }) {
+export default function PlaceCard({ place, onSelect, onDelete, onEdit, onCopyCoords, onShare, selectedId, userLocation, sessionUserId }) {
   const isSelected = selectedId === place.id;
   const cat = getCategoryById(place.category);
 
@@ -40,7 +40,7 @@ export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onS
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         {!place.image && (
           <div className="place-icon" style={{ backgroundColor: `${cat.color}15`, color: cat.color }}>
-            {cat.emoji}
+            <cat.IconComponent size={20} />
           </div>
         )}
         
@@ -77,6 +77,9 @@ export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onS
         borderTop: isSelected ? '1px solid var(--border)' : 'none', 
         paddingTop: isSelected ? 12 : 0 
       }}>
+        <button className="nav-btn" onClick={(e) => { e.stopPropagation(); onEdit(place); }} title={place.user_id === sessionUserId ? "Modifier" : "Personnaliser (Créer une copie)"}>
+          <PenLine size={16} />
+        </button>
         <button className="nav-btn" onClick={(e) => { e.stopPropagation(); onShare(place); }} title="Partager">
           <Share2 size={16} />
         </button>
@@ -93,9 +96,11 @@ export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onS
         >
           <ExternalLink size={16} />
         </a>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(place.id); }} className="nav-btn delete-btn" title="Supprimer">
-          <Trash2 size={16} />
-        </button>
+        {place.user_id === sessionUserId && (
+          <button onClick={(e) => { e.stopPropagation(); onDelete(place.id); }} className="nav-btn delete-btn" title="Supprimer">
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
     </div>
   );

@@ -125,12 +125,51 @@ export function usePlaces() {
     });
   }, []);
 
-  const updatePlace = useCallback((id, data) => {
-    setPlaces((prev) => {
-      const updated = prev.map((p) => (p.id === id ? { ...p, ...data } : p));
-      save(updated);
-      return updated;
-    });
+  const updatePlace = useCallback(async (id, data) => {
+    let imageUrl = data.image;
+
+    // Supabase Storage upload if it's a File (from AddPlaceModal)
+    if (data.image && typeof data.image !== 'string') {
+      try {
+        const file = data.image;
+        const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
+        const fileName = `${id}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('place_photos')
+          .upload(fileName, file, { upsert: true });
+
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from('place_photos')
+            .getPublicUrl(fileName);
+          imageUrl = urlData.publicUrl;
+        }
+      } catch (err) {
+        console.error('Image upload failed', err);
+      }
+    }
+
+    const { data: updatedData, error } = await supabase
+      .from('places')
+      .update({
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        lat: data.lat,
+        lng: data.lng,
+        rating: data.rating,
+        is_public: data.isPublic,
+        image_url: imageUrl,
+      })
+      .eq('id', id)
+      .select();
+
+    if (!error && updatedData) {
+      setPlaces((prev) => prev.map((p) => (p.id === id ? { ...updatedData[0], image: updatedData[0].image_url, isFavorite: updatedData[0].is_favorite } : p)));
+      return updatedData[0];
+    } else {
+      console.error("Update failed", error);
+    }
   }, []);
 
   return { places, addPlace, deletePlace, updatePlace };

@@ -2,8 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Heart, X, Eye, EyeOff } from 'lucide-react';
 import { CATEGORIES, getCategoryById } from '../data/categories';
 
-export default function AddPlaceModal({ coords, onConfirm, onClose }) {
-  const [form, setForm] = useState({
+export default function AddPlaceModal({ coords, onConfirm, onClose, initialData, isFork }) {
+  const [form, setForm] = useState(initialData ? {
+    name: initialData.name || '',
+    category: initialData.category || 'other',
+    description: initialData.description || '',
+    address: initialData.address || '',
+    lat: initialData.lat.toFixed(6),
+    lng: initialData.lng.toFixed(6),
+    rating: initialData.rating || 3,
+    isFavorite: initialData.isFavorite || false,
+    image: initialData.image || null,
+    isPublic: isFork ? false : (initialData.is_public ?? true), // Forked copies default to private
+  } : {
     name: '',
     category: 'other',
     description: '',
@@ -13,7 +24,7 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
     rating: 3,
     isFavorite: false,
     image: null,
-    isPublic: true, // Added isPublic state
+    isPublic: true,
   });
   const fileInputRef = useRef(null);
   const [error, setError] = useState('');
@@ -113,10 +124,10 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
-              Ajouter un lieu
+              {isFork ? 'Personnaliser ce lieu' : (initialData ? 'Modifier le lieu' : 'Ajouter un lieu')}
             </h2>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
-              {coords ? `📍 ${parseFloat(form.lat).toFixed(4)}, ${parseFloat(form.lng).toFixed(4)}` : 'Nouveau lieu'}
+              {isFork ? "Enregistrez-le dans vos lieux privés pour le modifier." : (initialData ? 'Apportez vos modifications ci-dessous' : (coords ? `📍 ${parseFloat(form.lat).toFixed(4)}, ${parseFloat(form.lng).toFixed(4)}` : 'Nouveau lieu'))}
             </p>
           </div>
           <button
@@ -322,7 +333,7 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
               Annuler
             </button>
             <button type="submit" className="btn-primary" style={{ flex: 2 }}>
-              ✓ Ajouter le lieu
+              {isFork ? '✓ Sauvegarder ma copie' : (initialData ? '✓ Enregistrer' : '✓ Ajouter le lieu')}
             </button>
           </div>
         </form>

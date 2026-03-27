@@ -20,6 +20,7 @@ export default function App() {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [pendingCoords, setPendingCoords] = useState(null);
+  const [editingPlace, setEditingPlace] = useState(null);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -72,6 +73,27 @@ export default function App() {
     setSelectedPlace(newPlace);
     addToast(`✅ "${placeData.name}" ajouté !`);
   }, [addPlace, addToast]);
+
+  const handleEditClick = useCallback((place) => {
+    setEditingPlace(place);
+  }, []);
+
+  const closeEditModal = useCallback(() => {
+    setEditingPlace(null);
+  }, []);
+
+  const handleConfirmEdit = useCallback(async (placeData) => {
+    if (editingPlace.user_id !== session.user.id) {
+       const newPlace = await addPlace({ ...placeData, isPublic: false });
+       addToast(`✨ Lieu personnalisé et sauvegardé !`);
+       setSelectedPlace(newPlace);
+    } else {
+       const updatedPlace = await updatePlace(editingPlace.id, placeData);
+       addToast(`✏️ "${placeData.name}" modifié !`);
+       if (selectedPlace?.id === editingPlace.id) setSelectedPlace(updatedPlace);
+    }
+    setEditingPlace(null);
+  }, [editingPlace, session, addPlace, updatePlace, addToast, selectedPlace]);
 
   const handleDelete = useCallback((id) => {
     const place = places.find((p) => p.id === id);
@@ -133,9 +155,11 @@ export default function App() {
         onSelectPlace={handleSelectPlace}
         selectedPlace={selectedPlace}
         onDeletePlace={deletePlace}
+        onEditPlace={handleEditClick}
         onToggleFavorite={toggleFavorite}
         onUpdateRating={updateRating}
         userLocation={userLocation}
+        sessionUserId={session.user.id}
       />
       <main style={{ flex: 1, position: 'relative', zIndex: 0 }}>
         <MapView
@@ -171,11 +195,13 @@ export default function App() {
       </main>
 
       {/* Modal */}
-      {pendingCoords !== null && (
+      {(pendingCoords !== null || editingPlace !== null) && (
         <AddPlaceModal
           coords={pendingCoords}
-          onConfirm={handleConfirmAdd}
-          onClose={closeModal}
+          initialData={editingPlace}
+          isFork={editingPlace && editingPlace.user_id !== session.user.id}
+          onConfirm={editingPlace ? handleConfirmEdit : handleConfirmAdd}
+          onClose={editingPlace ? closeEditModal : closeModal}
         />
       )}
 
