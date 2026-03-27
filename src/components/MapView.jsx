@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin, Navigation, Heart } from 'lucide-react';
+import { MapPin, Navigation, Heart, Lock } from 'lucide-react';
 import { getCategoryById } from '../data/categories';
 import LocateUser from './LocateUser';
 import 'leaflet/dist/leaflet.css';
@@ -203,6 +203,7 @@ function PopupContent({ place, cat }) {
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.2 }}>{place.name}</div>
+            {place.is_public === false && <Lock size={14} color="var(--text-muted)" title="Lieu privé" />}
             {place.isFavorite && <Heart size={12} fill="#f43f5e" color="#f43f5e" />}
           </div>
           <div style={{ fontSize: 11, color: cat.color, fontWeight: 500, marginTop: 1 }}>{cat.label}</div>

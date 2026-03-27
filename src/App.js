@@ -3,11 +3,16 @@ import './index.css';
 import MapView from './components/MapView';
 import Sidebar from './components/Sidebar';
 import AddPlaceModal from './components/AddPlaceModal';
+import Auth from './components/Auth';
 import { usePlaces } from './hooks/usePlaces';
 import { useLiveLocations } from './hooks/useLiveLocations';
 import { useToast } from './hooks/useToast';
+import { supabase } from './lib/supabase';
+import { LogOut, Plus } from 'lucide-react';
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  
   const { places, addPlace, deletePlace, toggleFavorite, updateRating } = usePlaces();
   const { toasts, addToast } = useToast();
   const { liveUsers } = useLiveLocations();
@@ -20,7 +25,17 @@ export default function App() {
   const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
-    if (navigator.geolocation) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+  }, []);
+
+  useEffect(() => {
+    if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition((pos) => {
         setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       }, null, { enableHighAccuracy: true });
@@ -94,25 +109,35 @@ export default function App() {
     }
   }, [addToast]);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (!session) {
+    return <Auth />;
+  }
+
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-      <Sidebar
-        places={places}
-        selectedId={selectedPlace?.id}
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', background: 'var(--bg-primary)', overflow: 'hidden', position: 'relative', color: 'var(--text-primary)' }}>
+      {/* Toast Notifications */}
+      <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
+        {toasts.map(toast => (
+          <div key={toast.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', padding: '12px 16px', borderRadius: '12px', fontSize: '14px', fontWeight: 500, boxShadow: 'var(--shadow-lg)', display: 'flex', alignItems: 'center', pointerEvents: 'auto' }}>
+            <span style={{ marginRight: 8 }}>✨</span> {toast.message}
+          </div>
+        ))}
+      </div>
+
+      <Sidebar 
+        places={places} 
         onSelectPlace={handleSelectPlace}
-        onDeletePlace={handleDelete}
-        onCopyCoords={handleCopyCoords}
-        onSharePlace={handleShare}
-        onAddClick={handleAddClick}
-        filterCat={filterCat}
-        setFilterCat={setFilterCat}
-        search={search}
-        setSearch={setSearch}
-        isAdding={isAdding}
+        selectedPlace={selectedPlace}
+        onDeletePlace={deletePlace}
+        onToggleFavorite={toggleFavorite}
+        onUpdateRating={updateRating}
         userLocation={userLocation}
       />
-
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      <main style={{ flex: 1, position: 'relative', zIndex: 0 }}>
         <MapView
           places={places}
           selectedPlace={selectedPlace}
@@ -125,30 +150,25 @@ export default function App() {
 
         {/* Floating add button when not in add mode */}
         {!isAdding && (
-          <button
+          <button 
             onClick={handleAddClick}
             className="btn-primary"
-            style={{
-              position: 'absolute',
-              bottom: 28,
-              right: 28,
-              zIndex: 1000,
-              width: 52,
-              height: 52,
-              borderRadius: '50%',
-              fontSize: 26,
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 6px 24px rgba(99,102,241,0.5)',
-            }}
+            style={{ position: 'absolute', bottom: 32, right: 32, zIndex: 1000, width: 56, height: 56, borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyItems: 'center', boxShadow: 'var(--shadow-lg)' }}
             title="Ajouter un lieu"
           >
-            +
+            <Plus size={24} style={{ margin: 'auto' }} />
           </button>
         )}
-      </div>
+
+        <button 
+          onClick={handleLogout}
+          className="btn-secondary"
+          style={{ position: 'absolute', top: 16, right: 80, zIndex: 1000, width: 44, height: 44, borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyItems: 'center', background: 'var(--bg-secondary)' }}
+          title="Se déconnecter"
+        >
+          <LogOut size={20} style={{ margin: 'auto' }} />
+        </button>
+      </main>
 
       {/* Modal */}
       {pendingCoords !== null && (

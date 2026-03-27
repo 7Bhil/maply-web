@@ -1,5 +1,4 @@
-import React from 'react';
-import { Share2, Copy, Trash2, Heart, ExternalLink } from 'lucide-react';
+import { Share2, Copy, Trash2, Heart, ExternalLink, Lock } from 'lucide-react';
 import { getCategoryById } from '../data/categories';
 
 export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onShare, selectedId, userLocation }) {
@@ -47,7 +46,10 @@ export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onS
         
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 className="place-name">{place.name}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <h3 className="place-name">{place.name}</h3>
+              {place.is_public === false && <Lock size={14} className="text-slate-500" title="Lieu privé" />}
+            </div>
             {!place.image && place.isFavorite && <Heart size={14} fill="#f43f5e" color="#f43f5e" />}
           </div>
           
@@ -69,14 +71,16 @@ export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onS
       </div>
 
       <div className="place-actions" style={{ 
+        display: 'flex',
+        gap: '8px',
         marginTop: isSelected ? 15 : 12, 
         borderTop: isSelected ? '1px solid var(--border)' : 'none', 
         paddingTop: isSelected ? 12 : 0 
       }}>
-        <button onClick={(e) => { e.stopPropagation(); onShare(place); }} title="Partager">
+        <button className="nav-btn" onClick={(e) => { e.stopPropagation(); onShare(place); }} title="Partager">
           <Share2 size={16} />
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onCopyCoords(place); }} title="Copier les coordonnées">
+        <button className="nav-btn" onClick={(e) => { e.stopPropagation(); onCopyCoords(place); }} title="Copier les coordonnées">
           <Copy size={16} />
         </button>
         <a 
@@ -89,7 +93,7 @@ export default function PlaceCard({ place, onSelect, onDelete, onCopyCoords, onS
         >
           <ExternalLink size={16} />
         </a>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(place.id); }} className="delete-btn" title="Supprimer">
+        <button onClick={(e) => { e.stopPropagation(); onDelete(place.id); }} className="nav-btn delete-btn" title="Supprimer">
           <Trash2 size={16} />
         </button>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Heart, X } from 'lucide-react';
+import { Camera, Heart, X, Eye, EyeOff } from 'lucide-react';
 import { CATEGORIES, getCategoryById } from '../data/categories';
 
 export default function AddPlaceModal({ coords, onConfirm, onClose }) {
@@ -13,6 +13,7 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
     rating: 3,
     isFavorite: false,
     image: null,
+    isPublic: true, // Added isPublic state
   });
   const fileInputRef = useRef(null);
   const [error, setError] = useState('');
@@ -58,6 +59,8 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const toggle = (field) => () => setForm((f) => ({ ...f, [field]: !f[field] }));
+
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -100,6 +103,7 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
       categoryLabel: cat.label,
       categoryEmoji: cat.emoji,
       categoryColor: cat.color,
+      is_public: form.isPublic, // Pass isPublic to onConfirm
     });
   };
 
@@ -256,6 +260,7 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
                   <input className="form-input" placeholder="2.3522" value={form.lng} onChange={set('lng')} />
                 </div>
               </div>
+
               <button
                 type="button"
                 className="btn-secondary"
@@ -266,6 +271,45 @@ export default function AddPlaceModal({ coords, onConfirm, onClose }) {
               </button>
             </div>
           )}
+
+          {/* Public/Private Toggle */}
+          <div>
+            <label style={labelStyle}>Visibilité</label>
+            <button
+              type="button"
+              onClick={toggle('isPublic')}
+              className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                form.isPublic 
+                  ? 'bg-blue-50 border-blue-200 text-blue-700' 
+                  : 'bg-slate-100 border-slate-300 text-slate-700'
+              }`}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: '8px', borderWidth: '1px', transition: 'background-color 0.2s, border-color 0.2s',
+                backgroundColor: form.isPublic ? 'var(--accent-light)' : 'var(--bg-secondary)',
+                borderColor: form.isPublic ? 'var(--accent)' : 'var(--border)',
+                color: form.isPublic ? 'var(--accent-dark)' : 'var(--text-primary)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {form.isPublic ? <Eye size={20} style={{ color: 'var(--accent)' }} /> : <EyeOff size={20} style={{ color: 'var(--text-muted)' }} />}
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontWeight: 600, fontSize: '14px' }}>{form.isPublic ? 'Publique' : 'Privé'}</div>
+                  <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                    {form.isPublic ? 'Visible par tout le monde' : 'Visible uniquement par vous'}
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                width: '40px', height: '24px', display: 'flex', alignItems: 'center', borderRadius: '9999px', padding: '4px', transition: 'background-color 0.2s',
+                backgroundColor: form.isPublic ? 'var(--accent)' : 'var(--text-muted)',
+              }}>
+                <div style={{
+                  backgroundColor: 'white', width: '16px', height: '16px', borderRadius: '9999px', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', transition: 'transform 0.2s',
+                  transform: form.isPublic ? 'translateX(16px)' : 'translateX(0)',
+                }}></div>
+              </div>
+            </button>
+          </div>
 
           {error && (
             <p style={{ fontSize: 13, color: 'var(--danger)', background: 'rgba(239,68,68,0.08)', padding: '8px 12px', borderRadius: 6 }}>
