@@ -19,10 +19,8 @@ const save = (places) => {
 
 export function usePlaces() {
   const [places, setPlaces] = useState(getSaved);
-  const [loading, setLoading] = useState(false);
 
   const fetchPlaces = useCallback(async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from('places')
       .select('*')
@@ -38,7 +36,6 @@ export function usePlaces() {
       setPlaces(mapped);
       save(mapped);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {

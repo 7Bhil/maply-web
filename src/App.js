@@ -24,7 +24,6 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
-  const [profile, setProfile] = useState(null);
   const [showPseudoPrompt, setShowPseudoPrompt] = useState(false);
   const [newPseudo, setNewPseudo] = useState('');
 
@@ -48,7 +47,6 @@ export default function App() {
     try {
       const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
       if (!error && data) {
-        setProfile(data);
         setShowPseudoPrompt(false);
       } else if (error && (error.code === 'PGRST116' || error.message.includes('profiles'))) {
         setShowPseudoPrompt(true);
