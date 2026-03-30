@@ -400,6 +400,30 @@ button {
   animation: spin 1s linear infinite;
 }
 
+/* ── Sidebar Toggle ── */
+.sidebar-toggle {
+  position: absolute;
+  top: 16px;
+  z-index: 1002;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ── World Counter Badge ── */
 .world-counter-badge {
   position: absolute;

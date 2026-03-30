@@ -8,7 +8,7 @@ import { usePlaces } from './hooks/usePlaces';
 import { useLiveLocations } from './hooks/useLiveLocations';
 import { useToast } from './hooks/useToast';
 import { supabase } from './lib/supabase';
-import { LogOut, Plus } from 'lucide-react';
+import { LogOut, Plus, Menu, X } from 'lucide-react';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -26,6 +26,7 @@ export default function App() {
   const [userLocation, setUserLocation] = useState(null);
   const [showPseudoPrompt, setShowPseudoPrompt] = useState(false);
   const [newPseudo, setNewPseudo] = useState('');
+  const [showSidebar, setShowSidebar] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -182,25 +183,42 @@ export default function App() {
         ))}
       </div>
 
-      <Sidebar 
-        places={places} 
-        onSelectPlace={handleSelectPlace}
-        selectedPlace={selectedPlace}
-        onDeletePlace={handleDelete}
-        onEditPlace={handleEditClick}
-        onCopyCoords={handleCopyCoords}
-        onSharePlace={handleShare}
-        onToggleFavorite={toggleFavorite}
-        onUpdateRating={updateRating}
-        filterCat={filterCat}
-        setFilterCat={setFilterCat}
-        search={search}
-        setSearch={setSearch}
-        isAdding={isAdding}
-        userLocation={userLocation}
-        sessionUserId={session.user.id}
-      />
+      <div style={{ 
+        width: showSidebar ? 320 : 0, 
+        transition: 'width 0.3s ease', 
+        overflow: 'hidden',
+        flexShrink: 0,
+        zIndex: 1001 
+      }}>
+        <Sidebar 
+          places={places} 
+          onSelectPlace={handleSelectPlace}
+          selectedPlace={selectedPlace}
+          onDeletePlace={handleDelete}
+          onEditPlace={handleEditClick}
+          onCopyCoords={handleCopyCoords}
+          onSharePlace={handleShare}
+          onToggleFavorite={toggleFavorite}
+          onUpdateRating={updateRating}
+          filterCat={filterCat}
+          setFilterCat={setFilterCat}
+          search={search}
+          setSearch={setSearch}
+          isAdding={isAdding}
+          userLocation={userLocation}
+          sessionUserId={session.user.id}
+        />
+      </div>
+
       <main style={{ flex: 1, position: 'relative', zIndex: 0 }}>
+        {/* Toggle Sidebar Button */}
+        <button 
+          onClick={() => setShowSidebar(!showSidebar)}
+          className="sidebar-toggle"
+          style={{ left: showSidebar ? 332 : 16 }}
+        >
+          {showSidebar ? <X size={20} /> : <Menu size={20} />}
+        </button>
           <MapView
             places={places}
             selectedPlace={selectedPlace}
