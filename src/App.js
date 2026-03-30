@@ -37,7 +37,6 @@ export default function App() {
       setSession(session);
       if (session) fetchProfile(session.user.id);
       else {
-        setProfile(null);
         setShowPseudoPrompt(false);
       }
     });
