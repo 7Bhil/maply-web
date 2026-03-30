@@ -30,7 +30,7 @@ export default function Auth() {
           }
         });
         if (error) throw error;
-        setSuccessMsg('Inscription réussie ! Vérifiez vos emails si nécessaire.');
+        setSuccessMsg('Inscription réussie ! Vous pouvez maintenant vous connecter.');
       }
     } catch (error) {
       if (error.message.includes('Invalid login credentials')) {
