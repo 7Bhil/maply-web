@@ -29,6 +29,8 @@ export default function Auth() {
     } catch (error) {
       if (error.message.includes('Invalid login credentials')) {
         setErrorMsg('Email ou mot de passe incorrect.');
+      } else if (error.message.includes('Email not confirmed')) {
+        setErrorMsg('Votre email n\'a pas encore été confirmé. Vérifiez vos messages (et vos spams).');
       } else {
         setErrorMsg(error.message);
       }
