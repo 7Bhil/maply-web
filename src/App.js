@@ -183,13 +183,7 @@ export default function App() {
         ))}
       </div>
 
-      <div style={{ 
-        width: showSidebar ? 320 : 0, 
-        transition: 'width 0.3s ease', 
-        overflow: 'hidden',
-        flexShrink: 0,
-        zIndex: 1001 
-      }}>
+      <div className={`sidebar-container ${showSidebar ? 'open' : ''}`}>
         <Sidebar 
           places={places} 
           onSelectPlace={handleSelectPlace}
@@ -214,8 +208,7 @@ export default function App() {
         {/* Toggle Sidebar Button */}
         <button 
           onClick={() => setShowSidebar(!showSidebar)}
-          className="sidebar-toggle"
-          style={{ left: showSidebar ? 332 : 16 }}
+          className={`sidebar-toggle ${showSidebar ? 'open' : ''}`}
         >
           {showSidebar ? <X size={20} /> : <Menu size={20} />}
         </button>

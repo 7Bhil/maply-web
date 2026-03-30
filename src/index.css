@@ -400,10 +400,25 @@ button {
   animation: spin 1s linear infinite;
 }
 
+/* ── Sidebar Layout ── */
+.sidebar-container {
+  width: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  flex-shrink: 0;
+  z-index: 1001;
+  background: var(--bg-secondary);
+}
+
+.sidebar-container.open {
+  width: 320px;
+}
+
 /* ── Sidebar Toggle ── */
 .sidebar-toggle {
   position: absolute;
   top: 16px;
+  left: 16px;
   z-index: 1002;
   width: 40px;
   height: 40px;
@@ -415,13 +430,46 @@ button {
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-toggle.open {
+  left: 332px;
 }
 
 .sidebar-toggle:hover {
   background: var(--bg-tertiary);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* ── Mobile Optimization ── */
+@media (max-width: 768px) {
+  .sidebar-container {
+    position: absolute;
+    height: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .sidebar-container.open {
+    width: 85vw;
+    max-width: 320px;
+  }
+
+  .sidebar-toggle.open {
+    left: calc(85vw + 12px);
+  }
+  
+  @supports (width: min(1px, 1px)) {
+    .sidebar-toggle.open {
+      left: calc(min(320px, 85vw) + 12px);
+    }
+  }
+
+  /* Adjust logout button on mobile to avoid overlap */
+  .btn-secondary[title="Se déconnecter"] {
+    right: 16px !important;
+  }
 }
 
 /* ── World Counter Badge ── */
