@@ -24,16 +24,51 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [showPseudoPrompt, setShowPseudoPrompt] = useState(false);
+  const [newPseudo, setNewPseudo] = useState('');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      if (session) fetchProfile(session.user.id);
     });
 
     supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) fetchProfile(session.user.id);
+      else {
+        setProfile(null);
+        setShowPseudoPrompt(false);
+      }
     });
   }, []);
+
+  const fetchProfile = async (userId) => {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (!error && data) {
+        setProfile(data);
+        setShowPseudoPrompt(false);
+      } else if (error && (error.code === 'PGRST116' || error.message.includes('profiles'))) {
+        setShowPseudoPrompt(true);
+      }
+    } catch (e) {
+      setShowPseudoPrompt(true);
+    }
+  };
+
+  const handleSetPseudo = async () => {
+    if (!newPseudo.trim()) return;
+    try {
+      const { error } = await supabase.from('profiles').upsert({ id: session.user.id, username: newPseudo.trim() });
+      if (!error) {
+        fetchProfile(session.user.id);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -154,23 +189,36 @@ export default function App() {
         places={places} 
         onSelectPlace={handleSelectPlace}
         selectedPlace={selectedPlace}
-        onDeletePlace={deletePlace}
+        onDeletePlace={handleDelete}
         onEditPlace={handleEditClick}
+        onCopyCoords={handleCopyCoords}
+        onSharePlace={handleShare}
         onToggleFavorite={toggleFavorite}
         onUpdateRating={updateRating}
+        filterCat={filterCat}
+        setFilterCat={setFilterCat}
+        search={search}
+        setSearch={setSearch}
+        isAdding={isAdding}
         userLocation={userLocation}
         sessionUserId={session.user.id}
       />
       <main style={{ flex: 1, position: 'relative', zIndex: 0 }}>
-        <MapView
-          places={places}
-          selectedPlace={selectedPlace}
-          isAdding={isAdding}
-          onMapClick={handleMapClick}
-          onSelectPlace={handleSelectPlace}
-          userLocation={userLocation}
-          liveUsers={liveUsers}
-        />
+          <MapView
+            places={places}
+            selectedPlace={selectedPlace}
+            isAdding={isAdding}
+            onMapClick={handleMapClick}
+            onSelectPlace={handleSelectPlace}
+            userLocation={userLocation}
+            liveUsers={liveUsers}
+          />
+
+          {/* Social Stats / World Counter */}
+          <div className="world-counter-badge">
+             <div className="online-dot"></div>
+             <span>{liveUsers.length} en ligne</span>
+          </div>
 
         {/* Floating add button when not in add mode */}
         {!isAdding && (
@@ -213,6 +261,29 @@ export default function App() {
           </div>
         ))}
       </div>
+      {/* Pseudo Prompt Modal */}
+      {showPseudoPrompt && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ textAlign: 'center' }}>
+            <h2 style={{ marginBottom: 12 }}>Bienvenue sur Maply !</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 24, fontSize: 14 }}>
+              Choisissez un pseudo pour que vos amis puissent vous reconnaître lors des partages en direct.
+            </p>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="Votre pseudo..." 
+              value={newPseudo}
+              onChange={(e) => setNewPseudo(e.target.value)}
+              style={{ marginBottom: 20 }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSetPseudo()}
+            />
+            <button className="btn-primary" style={{ width: '100%' }} onClick={handleSetPseudo}>
+              Confirmer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
