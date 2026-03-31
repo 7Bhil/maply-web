@@ -291,6 +291,30 @@ button {
   background: var(--bg-tertiary);
 }
 
+.btn-social {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all var(--transition);
+}
+
+.btn-social:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-light);
+}
+
+.btn-social svg {
+  flex-shrink: 0;
+}
+
 .btn-danger {
   background: transparent;
   color: var(--danger);
