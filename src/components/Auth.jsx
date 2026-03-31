@@ -47,6 +47,10 @@ export default function Auth() {
 
   const handleSocialLogin = async (provider) => {
     setErrorMsg('');
+    if (provider === 'facebook') {
+      setErrorMsg('Connexion Facebook bientôt disponible ! Pour l\'instant, utilise Google ou Email.');
+      return;
+    }
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
